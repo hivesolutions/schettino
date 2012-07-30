@@ -37,13 +37,35 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
+PERSONS = ["Ana", "Sofia", "Alexandra"]
+""" The persons to be allocated to the tasks
+this are the names for the domain ranges """
+
 import constraint
 
 def run():
     problem = constraint.Problem()
-    problem.addVariable("a", [1, 2, 3])
-    problem.addVariable("b", [4, 5, 6])
-    print problem.getSolutions()
+
+    domain = range(len(PERSONS))
+
+    problem.addVariable("D1H1", domain)
+    problem.addVariable("D1H2", domain)
+
+    # retrieves a solution for the problem
+    # and prints it a beautiful manner
+    solutions = problem.getSolutions()
+    for solution in solutions:
+        print_solution(solution)
+        print ""
+
+def print_solution(solution):
+    keys = solution.keys()
+    keys.sort()
+
+    for key in keys:
+        value = solution[key]
+        person = PERSONS[value]
+        print "KEY := %s" % person
 
 if __name__ == "__main__":
     run()
