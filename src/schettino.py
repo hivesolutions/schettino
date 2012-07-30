@@ -37,35 +37,138 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
-PERSONS = ["Ana", "Sofia", "Alexandra"]
+PERSONS = ["Ana", "Sofia", "Alexandra", "Rabeta"]
 """ The persons to be allocated to the tasks
 this are the names for the domain ranges """
 
-import constraint
+PERSONS_COUNT = len(PERSONS)
+""" The number of persons available to be scheduled
+in the current problem """
+
+BITMAP = (
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
+    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+)
+""" The base bitmap that controls the scheduling
+of the task in a per time basis """
+
+N_DAYS = 7
+
+N_HOURS = 12
+
+def rule_1(solution):
+    """
+    Runs the rules that constrains the execution
+    of a task to certain number of hours per week.
+
+    This rule is named - work week time rule.
+    """
+
+    # tenho de poder fazer cortes !!!!
+    # por exemplo com cache de count por dias
+
+    for day in solution:
+        counter = [0 for _value in range(PERSONS_COUNT)]
+
+        for hour in day:
+            if hour == -1: continue
+            counter[hour] += 1
+
+        for count in counter:
+            if count <= 7: continue #@TODO: HARDCODED MUST BE CONFIGURABLE !!!
+            return False
+
+    return True
+
+def rule_2(solution):
+    # CADA PESSOA SO PODE TRABALHAR 6 dias por semana
+
+    counter = [0 for _value in range(PERSONS_COUNT)]
+
+    for day in solution:
+        _counter = [0 for _value in range(PERSONS_COUNT)]
+
+        for hour in day:
+            if hour == -1: continue
+            _counter[hour] += 1
+
+        _index = 0
+
+        for count in _counter:
+            if count > 0: counter[_index] += 1
+            _index += 1
+
+    for count in counter:
+        if count > 4: return False
+
+    return True
+
+def rules(solution):
+    _rules = (rule_1, rule_2)
+
+    for rule in _rules:
+        result = rule(solution)
+        if result: continue
+        return result
+
+    return True
+
+def solve(solution, value = None, i = 0, j = 0):
+    # tenho de alocar para x dias do mes
+    # vou primeiro alocar para uma semana
+
+    # rule1: so posso trabalhar no maximo 7 horas / dia
+    # rule2: so posso trabalhar 6 dias por semana
+    # rule3: so pode trabalhar no horario da manha (rita only)
+    # estas regras ja sao boas para começar
+
+    # tenho de utilizar um decorator para decorar as
+    # varias pessoas (unidade de alocacao) ao trabalho
+
+    if not value == None:
+        if j == N_HOURS: i += 1; j = 0
+        if i == N_DAYS: return True
+
+        if BITMAP[i][j] == 0:
+            solution[i][j] = -1
+        else:
+            solution[i][j] = value
+            result = rules(solution)
+            if not result: return False
+
+        j += 1
+
+    for index in range(PERSONS_COUNT):
+        result = solve(solution, index, i, j)
+        if result: return result
+
+    return False
 
 def run():
-    problem = constraint.Problem()
-
-    domain = range(len(PERSONS))
-
-    problem.addVariable("D1H1", domain)
-    problem.addVariable("D1H2", domain)
-
-    # retrieves a solution for the problem
-    # and prints it a beautiful manner
-    solutions = problem.getSolutions()
-    for solution in solutions:
-        print_solution(solution)
-        print ""
+    solution = [[-1 for _value in xrange(N_HOURS)] for _value in xrange(N_DAYS)]
+    solved = solve(solution)
+    print solved
+    print_solution(solution)
 
 def print_solution(solution):
-    keys = solution.keys()
-    keys.sort()
 
-    for key in keys:
-        value = solution[key]
-        person = PERSONS[value]
-        print "KEY := %s" % person
+    index = 0
+    for day in solution:
+
+        print ":: DAY %d ::" % index
+
+        for hour in day:
+            person = hour > -1 and PERSONS[hour] or "Unset"
+            print "%s, " % person,
+
+        print "\n"
+
+        index += 1
 
 if __name__ == "__main__":
     run()
