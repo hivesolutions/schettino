@@ -37,6 +37,29 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
+import copy
+
+class Solution(list):
+    """
+    The base class for the solution of a problem,
+    note that it inherits from the base list type
+    because all the solution are expected to be
+    expressed as a list.
+    """
+
+    meta = {}
+    """ The meta information map that contains information
+    of calculus for the heuristics to be used in the solving """
+
+    def __init__(self):
+        self.meta = {}
+
+    def try_extend(self, value):
+        _clone = copy.copy(self)
+        _clone.append(value)
+        _clone.meta = self.meta
+        return _clone
+
 class Problem(object):
     """
     The base class for describing a problem for
@@ -77,6 +100,10 @@ class Problem(object):
     be the reference to the solution created by the last
     ran solving """
 
+    delta = 0
+    """ The time in milliseconds that took for the last soling
+    to execute (useful for benchmark) """
+
     def __init__(self):
         self.persons_count = len(self.persons)
         self.number_items = self.number_days * self.number_hours
@@ -90,6 +117,18 @@ class Problem(object):
         for rule in self.rules:
             method = getattr(self, rule)
             self._rules.append(method)
+
+    def get_ordered(self, solution = None):
+        # tries to retrieve the appropriate solution
+        # (defaulting to the current set solution)
+        solution = self._get_solution(solution)
+
+        current = solution.meta.get("current", 0)
+        _range = solution.meta.get("range", 0)
+        week = solution.meta.get("week", self._list_p())
+
+        ordered = [current] + range(self.persons_count)
+        return ordered
 
     def rule_1(self, solution):
         """
@@ -107,7 +146,7 @@ class Problem(object):
 
             if (index + 1) % self.number_hours == 0:
                 for count in counter:
-                    if count == 0 or count in self.hours_day: continue
+                    if count == 0 or count < self.max_hours_day: continue
                     return False
 
         return True
@@ -129,6 +168,7 @@ class Problem(object):
 
         for count in counter:
             if count <= self.max_days_week: continue
+            print "bateu rule 2"
             return False
 
         return True
@@ -136,7 +176,7 @@ class Problem(object):
     def verify(self, solution = None):
         # tries to retrieve the appropriate solution
         # (defaulting to the current set solution)
-        solution = solution or self.solution
+        solution = self._get_solution(solution)
 
         for rule in self._rules:
             result = rule(solution)
@@ -146,6 +186,39 @@ class Problem(object):
         # returns valid, because all the rules have
         # passed successfully
         return True
+
+    def state(self, solution = None):
+        # tries to retrieve the appropriate solution
+        # (defaulting to the current set solution)
+        solution = self._get_solution(solution)
+
+        day = solution.meta.get("day", 0)
+        current = solution.meta.get("current", -1)
+        range = solution.meta.get("range", 0)
+        week = solution.meta.get("week", self._list_p())
+
+        position = len(solution) - 1
+        _day = position / self.number_hours
+        if not _day == day:
+            current = -1
+            range = 0
+
+        # retrieves the current item from the solution
+        # and in case it's not valid returns immediately
+        # (not going to update the state for invalid values)
+        item = solution[-1]
+        if item == -1: return
+
+        week[item] += 1
+        if item == current: range += 1
+        else: range = 1
+
+        current = item
+
+        solution.meta["day"] = _day
+        solution.meta["current"] = current
+        solution.meta["range"] = range
+        solution.meta["week"] = week
 
     def get_structure(self):
         # in case there is no solution it's impossible
@@ -189,7 +262,7 @@ class Problem(object):
         return structure
 
     def print_s(self, solution = None):
-        solution = solution or self.solution
+        solution = self._get_solution(solution)
         if not solution: raise RuntimeError("No solution is available in problem")
 
         for index in xrange(len(solution)):
@@ -200,6 +273,9 @@ class Problem(object):
             print "%s, " % person,
 
             if (index + 1) % self.number_hours == 0: print ""
+
+    def _get_solution(self, solution):
+        return solution == None and self.solution or solution
 
     def _shorten_name(self, name):
         parts = name.split(" ")

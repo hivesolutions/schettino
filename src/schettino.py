@@ -37,11 +37,16 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
+import time
+
+import problems.base
 import problems.simple
 
 def solve(problem, value = None, all = False, callback = None):
-    solution = []
+    solution = problems.base.Solution()
+    initial = time.time()
     problem.solution = _solve(problem, solution, value, all, callback)
+    problem.delta = int((time.time() - initial) * 1000)
     return problem.solution
 
 def _solve(problem, solution, value = None, all = False, callback = None):
@@ -52,9 +57,18 @@ def _solve(problem, solution, value = None, all = False, callback = None):
     # otherwise it's a "normal" execution and the incremental
     # solution must be created and validated (backtracking)
     else:
-        solution = solution + [value]
+        # updates the solution with the new value then verifies
+        # if it's a valid solution for the problem, in case it's
+        # not returns immediately with an invalid value
+        solution = solution.try_extend(value)
         result = problem.verify(solution)
         if not result: return None
+
+        # updates the "state" of the solution, this operation
+        # should "calculate" all the "indirect" attributes that
+        # will then help in the discovery of the best match for
+        # the next iteration in solving process
+        problem.state(solution)
 
         position = len(solution)
         if position == problem.number_items:
@@ -66,7 +80,13 @@ def _solve(problem, solution, value = None, all = False, callback = None):
         if all: pass
         elif result: return result
     else:
-        for index in range(problem.persons_count):
+        # retrieves the domain range in an ordered fashion so
+        # that the solutions generated from these values are the
+        # best possible matches (provides faster resolution speed)
+        #ordered = problem.get_ordered(solution)
+        ordered = range(problem.persons_count)
+
+        for index in ordered:
             result = _solve(problem, solution, index, all, callback)
             if all: continue
             if not result: continue

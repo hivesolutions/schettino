@@ -41,12 +41,11 @@ import base
 
 class SimpleProblem(base.Problem):
     number_days = 7
-    number_hours = 3
-    hours_day = (1, 2, 3)
-    max_days_week = 2
+    number_hours = 13
+    max_hours_day = 7
+    max_days_week = 6
     rules = (
         "rule_1",
-        "rule_2"
     )
     persons = (
         "Ana Palhares",
@@ -55,11 +54,11 @@ class SimpleProblem(base.Problem):
         "Sofia Magalhães"
     )
     bitmap = (
-        1, 0, 1,
-        1, 1, 1,
-        1, 0, 1,
-        1, 0, 1,
-        1, 1, 0,
-        1, 0, 1,
-        1, 1, 1
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1
     )

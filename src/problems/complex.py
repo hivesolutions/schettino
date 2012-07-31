@@ -42,7 +42,7 @@ import base
 class ComplexProblem(base.Problem):
     number_days = 7
     number_hours = 12
-    hours_day = (7, 2)
+    max_hours_day = 7
     max_days_week = 5
     rules = (
         "rule_1",
