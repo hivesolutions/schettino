@@ -37,38 +37,36 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
-PERSONS = ("Ana Palhares", "João Magalhães", "Tiago Magalhães", "Sofia Magalhães")
-""" The persons to be allocated to the tasks
-this are the names for the domain ranges """
+class Problem(object):
+    """
+    The base class for describing a problem for
+    the schettino system.
+    """
 
-PERSONS_COUNT = len(PERSONS)
-""" The number of persons available to be scheduled
-in the current problem """
+    persons = ()
+    """ The persons to be allocated to the tasks
+    this are the names for the domain ranges """
 
-BITMAP = (
-    1, 0, 1,
-    1, 1, 1,
-    1, 0, 1,
-    1, 0, 1,
-    1, 1, 0,
-    1, 0, 1,
-    1, 1, 1
-)
-""" The base bitmap that controls the scheduling
-of the task in a per time basis """
+    persons_count = 0
+    """ The number of persons available to be scheduled
+    in the current problem """
 
-N_DAYS = 7
-""" The number of days in the problem, this value
-is previously calculated for performance reasons """
+    bitmap = ()
+    """ The base bitmap that controls the scheduling
+    of the task in a per time basis """
 
-N_HOURS = 3
-""" The number of hours in the problem, this value
-is previously calculated for performance reasons """
+    n_days = 0
+    """ The number of days in the problem, this value
+    is previously calculated for performance reasons """
 
-N_ITEMS = N_DAYS * N_HOURS
-""" The number of items available in the bitmap
-for processing """
+    n_hours = 0
+    """ The number of hours in the problem, this value
+    is previously calculated for performance reasons """
 
-HOURS_DAY = (1, 2, 3)
+    n_items = 0
+    """ The number of items available in the bitmap
+    for processing """
 
-MAX_DAYS_WEEK = 2
+    def __init__(self):
+        self.persons_count = len(self.persons)
+        self.n_items = self.n_days * self.n_hours
