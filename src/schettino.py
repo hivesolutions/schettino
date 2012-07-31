@@ -107,9 +107,6 @@ def rules(solution):
     return True
 
 def solve(solution, value = None, i = 0, all = False, callback = None):
-    # tenho de alocar para x dias do mes
-    # vou primeiro alocar para uma semana
-
     # rule1: so posso trabalhar no maximo 7 horas / dia
     # rule2: so posso trabalhar 6 dias por semana
     # rule3: so pode trabalhar no horario da manha (rita only)
