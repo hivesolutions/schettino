@@ -97,6 +97,8 @@ def rule_2(solution):
     return True
 
 def rules(solution):
+    # creates the tuple that contains the set
+    # of rules to be executed in sequence
     _rules = (rule_1, rule_2)
 
     for rule in _rules:
@@ -104,6 +106,8 @@ def rules(solution):
         if result: continue
         return result
 
+    # returns valid, because all the rules have
+    # passed successfully
     return True
 
 def solve(solution, value = None, all = False, callback = None):
@@ -145,9 +149,9 @@ def solve(solution, value = None, all = False, callback = None):
 
     return None
 
-COUNTER = 0
+#COUNTER = 0
 
-def tobias(solution):
+def handler(solution):
     print_solution(solution)
     #print solution
     #global COUNTER
@@ -156,7 +160,7 @@ def tobias(solution):
 
 def run():
     solution = []
-    solve(solution, all = True, callback = tobias)
+    solve(solution, all = True, callback = handler)
 
 def print_solution(solution):
 
