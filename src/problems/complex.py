@@ -37,38 +37,29 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
-PERSONS = ("Ana", "Tobias", "Matias", "Rabeton")
-""" The persons to be allocated to the tasks
-this are the names for the domain ranges """
+import base
 
-PERSONS_COUNT = len(PERSONS)
-""" The number of persons available to be scheduled
-in the current problem """
-
-BITMAP = (
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-)
-""" The base bitmap that controls the scheduling
-of the task in a per time basis """
-
-N_DAYS = 7
-""" The number of days in the problem, this value
-is previously calculated for performance reasons """
-
-N_HOURS = 12
-""" The number of hours in the problem, this value
-is previously calculated for performance reasons """
-
-N_ITEMS = N_DAYS * N_HOURS
-""" The number of items available in the bitmap
-for processing """
-
-HOURS_DAY = (7, 2)
-
-MAX_DAYS_WEEK = 5
+class ComplexProblem(base.Problem):
+    number_days = 7
+    number_hours = 12
+    hours_day = (7, 2)
+    max_days_week = 5
+    rules = (
+        "rule_1",
+        "rule_2"
+    )
+    persons = (
+        "Ana",
+        "Tobias",
+        "Matias",
+        "Rabeton"
+    )
+    bitmap = (
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    )
