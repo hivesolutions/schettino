@@ -84,12 +84,12 @@ class Problem(object):
 
     def set_rules(self, rules = None):
         rules = rules or self.rules
-        
+
         self._rules = []
-        
+
         for rule in self.rules:
             method = getattr(self, rule)
-            self._rules.append(method) 
+            self._rules.append(method)
 
     def rule_1(self, solution):
         """

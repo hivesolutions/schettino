@@ -45,18 +45,9 @@ def solve(problem, value = None, all = False, callback = None):
     return problem.solution
 
 def _solve(problem, solution, value = None, all = False, callback = None):
-    # rule1: so posso trabalhar no maximo 7 horas / dia
-    # rule2: so posso trabalhar 6 dias por semana
-    # rule3: so pode trabalhar no horario da manha (rita only)
-    # estas regras ja sao boas para começar
-
-    # tenho de utilizar um decorator para decorar as
-    # varias pessoas (unidade de alocacao) ao trabalho
-
     # in case the provided value is not set (first execution)
     # must start some values to be able to execute
-    if value == None:
-        position = 0
+    if value == None: position = 0
 
     # otherwise it's a "normal" execution and the incremental
     # solution must be created and validated (backtracking)
@@ -83,14 +74,8 @@ def _solve(problem, solution, value = None, all = False, callback = None):
 
     return None
 
-#COUNTER = 0
-
 def handler(problem, solution):
     problem.print_s(solution)
-    #print solution
-    #global COUNTER
-    #COUNTER += 1
-    #print COUNTER
 
 def run():
     problem = problems.simple.SimpleProblem()
