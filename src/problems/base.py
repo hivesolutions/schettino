@@ -154,11 +154,7 @@ class Problem(object):
             if (index + 1) % self.number_hours == 0:
                 for count in counter:
                     if count == 0 or count <= self.max_hours_day: continue
-
-                    failures = self.instrumentation.get("failures", {})
-                    rule_1_f = failures.get("rule_1", 0)
-                    failures["rule_1"] = rule_1_f + 1
-                    self.instrumentation["failures"] = failures
+                    self._add_failure(self.rule_1.__name__)
 
                     return False
 
@@ -181,12 +177,7 @@ class Problem(object):
 
         for count in counter:
             if count <= self.max_days_week: continue
-
-            failures = self.instrumentation.get("failures", {})
-            rule_2_f = failures.get("rule_1", 0)
-            failures["rule_2"] = rule_2_f + 1
-            self.instrumentation["failures"] = failures
-
+            self._add_failure(self.rule_2.__name__)
             return False
 
         return True
@@ -207,11 +198,11 @@ class Problem(object):
 
     def _week_count(self, week_mask):
         count = 0
-        
+
         for i in range(7):
             if not week_mask & 1 << i: continue
             count += 1
-        
+
         return count
 
     def state(self, solution = None):
@@ -230,15 +221,15 @@ class Problem(object):
         _day = position / self.number_hours
         if not _day == day:
             day_set = range(self.persons_count)
-            
+
             _removal = []
             for item in day_set:
                 week_count = self._week_count(week_mask[item])
                 if week_count < self.max_days_week: continue
                 _removal.append(item)
-            
+
             for item in _removal: day_set.remove(item)
-            
+
             current = -1
             _range = 0
 
@@ -326,6 +317,12 @@ class Problem(object):
             print "%s, " % person,
 
             if (index + 1) % self.number_hours == 0: print ""
+
+    def _add_failure(self, name):
+        failures = self.instrumentation.get("failures", {})
+        failure = failures.get(name, 0)
+        failures[name] = failure + 1
+        self.instrumentation["failures"] = failures
 
     def _get_solution(self, solution):
         return solution == None and self.solution or solution
