@@ -37,41 +37,10 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
-PERSONS = ["Ana", "Tobias", "Matias", "Rabeton"]
-""" The persons to be allocated to the tasks
-this are the names for the domain ranges """
+import problems.complex as problem
 
-PERSONS_COUNT = len(PERSONS)
-""" The number of persons available to be scheduled
-in the current problem """
-
-BITMAP = (
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-)
-""" The base bitmap that controls the scheduling
-of the task in a per time basis """
-
-
-#BITMAP = (
-#    (1, 0),
-#    (1, 1),
-#    (0, 0)
-#)
-
-
-N_DAYS = len(BITMAP)
-""" The number of days in the problem, this value
-is previously calculated for performance reasons """
-
-N_HOURS = len(BITMAP[0])
-""" The number of hours in the problem, this value
-is previously calculated for performance reasons """
+def list_p():
+    return [0 for _value in range(problem.PERSONS_COUNT)]
 
 def rule_1(solution):
     """
@@ -84,39 +53,37 @@ def rule_1(solution):
     # tenho de poder fazer cortes !!!!
     # por exemplo com cache de count por dias
 
-    for day in solution:
-        counter = [0 for _value in range(PERSONS_COUNT)]
+    for index in xrange(len(solution)):
+        if index % problem.N_HOURS == 0: counter = list_p()
 
-        for hour in day:
-            if hour == -1: continue
-            counter[hour] += 1
+        hour = solution[index]
+        if not hour == -1: counter[hour] += 1
 
-        for count in counter:
-            if count <= 7: continue #@TODO: HARDCODED MUST BE CONFIGURABLE !!!
-            return False
+        if (index + 1) % problem.N_HOURS == 0:
+            for count in counter:
+                if count == 0 or count in problem.HOURS_DAY: continue #@TODO: HARDCODED MUST BE CONFIGURABLE !!!
+                return False
 
     return True
 
 def rule_2(solution):
-    # CADA PESSOA SO PODE TRABALHAR 6 dias por semana
+    counter = list_p()
 
-    counter = [0 for _value in range(PERSONS_COUNT)]
+    for index in xrange(len(solution)):
+        if index % problem.N_HOURS == 0: _counter = list_p()
 
-    for day in solution:
-        _counter = [0 for _value in range(PERSONS_COUNT)]
+        hour = solution[index]
+        if not hour == -1: _counter[hour] += 1
 
-        for hour in day:
-            if hour == -1: continue
-            _counter[hour] += 1
-
-        _index = 0
-
-        for count in _counter:
-            if count > 0: counter[_index] += 1
-            _index += 1
+        if (index + 1) % problem.N_HOURS == 0:
+            index = 0
+            for count in _counter:
+                if count > 0: counter[index] += 1
+                index += 1
 
     for count in counter:
-        if count > 4: return False
+        if count <= problem.MAX_DAYS_WEEK: continue
+        return False
 
     return True
 
@@ -130,7 +97,7 @@ def rules(solution):
 
     return True
 
-def solve(solution, value = None, i = 0, j = 0, all = False, callback = None):
+def solve(solution, value = None, i = 0, all = False, callback = None):
     # tenho de alocar para x dias do mes
     # vou primeiro alocar para uma semana
 
@@ -143,49 +110,53 @@ def solve(solution, value = None, i = 0, j = 0, all = False, callback = None):
     # varias pessoas (unidade de alocacao) ao trabalho
 
     if not value == None:
-        solution[i][j] = value
+        solution = solution + [value]
         result = rules(solution)
-        if not result: return False
+        if not result: return None
 
-        j += 1
+        i += 1
+        if i == problem.N_ITEMS:
+            callback and callback(solution)
+            return solution
 
-        if j == N_HOURS: i += 1; j = 0
-        if i == N_DAYS: callback and callback(solution); return True
-
-    if BITMAP[i][j] == 0:
-        result = solve(solution, -1, i, j, all, callback)
+    if problem.BITMAP[i] == 0:
+        result = solve(solution, -1, i, all, callback)
         if all: pass
         elif result: return result
     else:
-        for index in range(PERSONS_COUNT):
-            result = solve(solution, index, i, j, all, callback)
+        for index in range(problem.PERSONS_COUNT):
+            result = solve(solution, index, i, all, callback)
             if all: continue
             if not result: continue
             return result
 
-    return False
+    return None
+
+COUNTER = 0
 
 def tobias(solution):
     print_solution(solution)
+    #print solution
+    #global COUNTER
+    #COUNTER += 1
+    #print COUNTER
 
 def run():
-    solution = [[-1 for _value in xrange(N_HOURS)] for _value in xrange(N_DAYS)]
+    solution = []
     solve(solution, all = True, callback = tobias)
 
 def print_solution(solution):
 
-    index = 0
-    for day in solution:
+    for index in xrange(len(solution)):
+        if index % problem.N_HOURS == 0: print ":: DAY %d ::" % (index / problem.N_HOURS)
 
-        print ":: DAY %d ::" % index
+        hour = solution[index]
+        person = hour > -1 and problem.PERSONS[hour] or "Unset"
+        print "%s, " % person,
 
-        for hour in day:
-            person = hour > -1 and PERSONS[hour] or "Unset"
-            print "%s, " % person,
+        if (index + 1) % problem.N_HOURS == 0: print ""
 
-        print "\n"
-
-        index += 1
+    print "====================================="
 
 if __name__ == "__main__":
     run()
