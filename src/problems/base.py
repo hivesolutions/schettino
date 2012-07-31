@@ -83,6 +83,10 @@ class Problem(object):
     method this way it's possible to control what
     kind of verification are done """
 
+    persons_r = {}
+    """ The map containing the series of "extra" rules
+    to be applied to a certain variable index (person) """
+
     number_days = 0
     """ The number of days in the problem, this value
     is previously calculated for performance reasons """
@@ -129,13 +133,29 @@ class Problem(object):
         # (defaulting to the current set solution)
         solution = self._get_solution(solution)
 
+        position = len(solution)
+
         current = solution.meta.get("current", 0)
         _range = solution.meta.get("range", 0)
         day_set = solution.meta.get("day_set", range(self.persons_count))
         week = solution.meta.get("week", self._list_p())
 
         ordered = day_set
-        return day_set
+
+        removal = []
+        for index in day_set:
+            bitmap = self.get_bitmap(index)
+            if bitmap[position]: continue
+            removal.append(index)
+
+        # in case the removal list is not empty there are
+        # items to be removed so the ordered list must be
+        # clones and the removal items removed
+        if removal:
+            ordered = copy.copy(ordered)
+            for index in removal: ordered.remove(index)
+
+        return ordered
 
     def rule_1(self, solution):
         """
@@ -222,13 +242,13 @@ class Problem(object):
         if not _day == day:
             day_set = range(self.persons_count)
 
-            _removal = []
+            removal = []
             for item in day_set:
                 week_count = self._week_count(week_mask[item])
                 if week_count < self.max_days_week: continue
-                _removal.append(item)
+                removal.append(item)
 
-            for item in _removal: day_set.remove(item)
+            for item in removal: day_set.remove(item)
 
             current = -1
             _range = 0
@@ -263,6 +283,23 @@ class Problem(object):
         solution.meta["range"] = _range
         solution.meta["week"] = week
         solution.meta["week_mask"] = week_mask
+
+    def get_bitmap(self, index):
+        person = self.persons[index]
+        rules = self.persons_r.get(person, {})
+        bitmap = rules.get("bitmap", None)
+        if not bitmap: return self.bitmap
+
+        _bitmap = []
+
+        for index in xrange(self.number_items):
+            first = self.bitmap[index]
+            second = bitmap[index]
+            final = first and second or 0
+            _bitmap.append(final)
+
+        # @TODO: !!!! tenho de fazer cache deste valor !!!!
+        return _bitmap
 
     def get_structure(self):
         # in case there is no solution it's impossible

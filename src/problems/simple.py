@@ -50,10 +50,10 @@ class SimpleProblem(base.Problem):
     )
     persons = (
         "Ana Palhares",
-        "Rita Silva",
-        "João Magalhães",
-        "Tiago Magalhães",
-        "Sofia Magalhães"
+        "Rita Jerónimo",
+        "Ana Isabel",
+        "Alexandra Lopes",
+        "Albano Madureira"
     )
     bitmap = (
         1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
@@ -65,7 +65,7 @@ class SimpleProblem(base.Problem):
         1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1
     )
     persons_r = {
-        "Rita Silva" : {
+        "Rita Jerónimo" : {
             "bitmap" : (
                 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
