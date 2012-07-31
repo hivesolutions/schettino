@@ -40,18 +40,27 @@ __license__ = "GNU General Public License (GPL), Version 3"
 import problems.complex as problem
 
 def list_p():
+    """
+    Creates a new empty list for the currently defined
+    person domain problem.
+
+    This is a utility function to be used to shorten the
+    time used to create a list of counters for persons.
+
+    @rtype: List
+    @return: The newly created zeroed list of counters
+    for the various persons.
+    """
+
     return [0 for _value in range(problem.PERSONS_COUNT)]
 
 def rule_1(solution):
     """
     Runs the rules that constrains the execution
-    of a task to certain number of hours per week.
+    of a task to certain number of hours per day.
 
-    This rule is named - work week time rule.
+    This rule is named - work day time rule.
     """
-
-    # tenho de poder fazer cortes !!!!
-    # por exemplo com cache de count por dias
 
     for index in xrange(len(solution)):
         if index % problem.N_HOURS == 0: counter = list_p()
@@ -61,7 +70,7 @@ def rule_1(solution):
 
         if (index + 1) % problem.N_HOURS == 0:
             for count in counter:
-                if count == 0 or count in problem.HOURS_DAY: continue #@TODO: HARDCODED MUST BE CONFIGURABLE !!!
+                if count == 0 or count in problem.HOURS_DAY: continue
                 return False
 
     return True
