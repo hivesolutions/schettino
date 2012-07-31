@@ -37,7 +37,7 @@ __copyright__ = "Copyright (c) 2008-2012 Hive Solutions Lda."
 __license__ = "GNU General Public License (GPL), Version 3"
 """ The license for the module """
 
-import problems.complex as problem
+import problems.simple as problem
 
 def list_p():
     """
@@ -106,7 +106,7 @@ def rules(solution):
 
     return True
 
-def solve(solution, value = None, i = 0, all = False, callback = None):
+def solve(solution, value = None, all = False, callback = None):
     # rule1: so posso trabalhar no maximo 7 horas / dia
     # rule2: so posso trabalhar 6 dias por semana
     # rule3: so pode trabalhar no horario da manha (rita only)
@@ -115,23 +115,30 @@ def solve(solution, value = None, i = 0, all = False, callback = None):
     # tenho de utilizar um decorator para decorar as
     # varias pessoas (unidade de alocacao) ao trabalho
 
-    if not value == None:
+    # in case the provided value is not set (first execution)
+    # must start some values to be able to execute
+    if value == None:
+        position = 0
+
+    # otherwise it's a "normal" execution and the incremental
+    # solution must be created and validated (backtracking)
+    else:
         solution = solution + [value]
         result = rules(solution)
         if not result: return None
 
-        i += 1
-        if i == problem.N_ITEMS:
+        position = len(solution)
+        if position == problem.N_ITEMS:
             callback and callback(solution)
             return solution
 
-    if problem.BITMAP[i] == 0:
-        result = solve(solution, -1, i, all, callback)
+    if problem.BITMAP[position] == 0:
+        result = solve(solution, -1, all, callback)
         if all: pass
         elif result: return result
     else:
         for index in range(problem.PERSONS_COUNT):
-            result = solve(solution, index, i, all, callback)
+            result = solve(solution, index, all, callback)
             if all: continue
             if not result: continue
             return result
