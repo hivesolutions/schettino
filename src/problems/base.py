@@ -100,6 +100,11 @@ class Problem(object):
     be the reference to the solution created by the last
     ran solving """
 
+    instrumentation = {}
+    """ The map containing the various debug values for
+    instrumentation of the result, this values are of crucial
+    importance in the debugging stage """
+
     delta = 0
     """ The time in milliseconds that took for the last soling
     to execute (useful for benchmark) """
@@ -107,6 +112,7 @@ class Problem(object):
     def __init__(self):
         self.persons_count = len(self.persons)
         self.number_items = self.number_days * self.number_hours
+        self.instrumentation = {}
         self.set_rules()
 
     def set_rules(self, rules = None):
@@ -125,10 +131,11 @@ class Problem(object):
 
         current = solution.meta.get("current", 0)
         _range = solution.meta.get("range", 0)
+        day_set = solution.meta.get("day_set", range(self.persons_count))
         week = solution.meta.get("week", self._list_p())
 
-        ordered = [current] + range(self.persons_count)
-        return ordered
+        ordered = day_set
+        return day_set
 
     def rule_1(self, solution):
         """
@@ -146,7 +153,13 @@ class Problem(object):
 
             if (index + 1) % self.number_hours == 0:
                 for count in counter:
-                    if count == 0 or count < self.max_hours_day: continue
+                    if count == 0 or count <= self.max_hours_day: continue
+
+                    failures = self.instrumentation.get("failures", {})
+                    rule_1_f = failures.get("rule_1", 0)
+                    failures["rule_1"] = rule_1_f + 1
+                    self.instrumentation["failures"] = failures
+
                     return False
 
         return True
@@ -168,7 +181,12 @@ class Problem(object):
 
         for count in counter:
             if count <= self.max_days_week: continue
-            print "bateu rule 2"
+
+            failures = self.instrumentation.get("failures", {})
+            rule_2_f = failures.get("rule_1", 0)
+            failures["rule_2"] = rule_2_f + 1
+            self.instrumentation["failures"] = failures
+
             return False
 
         return True
@@ -187,21 +205,42 @@ class Problem(object):
         # passed successfully
         return True
 
+    def _week_count(self, week_mask):
+        count = 0
+        
+        for i in range(7):
+            if not week_mask & 1 << i: continue
+            count += 1
+        
+        return count
+
     def state(self, solution = None):
         # tries to retrieve the appropriate solution
         # (defaulting to the current set solution)
         solution = self._get_solution(solution)
 
         day = solution.meta.get("day", 0)
+        day_set = solution.meta.get("day_set", range(self.persons_count))
         current = solution.meta.get("current", -1)
-        range = solution.meta.get("range", 0)
+        _range = solution.meta.get("range", 0)
         week = solution.meta.get("week", self._list_p())
+        week_mask = solution.meta.get("week_mask", self._list_p())
 
-        position = len(solution) - 1
+        position = len(solution)
         _day = position / self.number_hours
         if not _day == day:
+            day_set = range(self.persons_count)
+            
+            _removal = []
+            for item in day_set:
+                week_count = self._week_count(week_mask[item])
+                if week_count < self.max_days_week: continue
+                _removal.append(item)
+            
+            for item in _removal: day_set.remove(item)
+            
             current = -1
-            range = 0
+            _range = 0
 
         # retrieves the current item from the solution
         # and in case it's not valid returns immediately
@@ -209,16 +248,30 @@ class Problem(object):
         item = solution[-1]
         if item == -1: return
 
-        week[item] += 1
-        if item == current: range += 1
-        else: range = 1
+        if not week_mask[item] & 1 << _day:
+            week[item] += 1
+            week_mask[item] |= 1 << _day
 
+        if item == current: _range += 1
+        else: _range = 1
+
+        # sets the current element as the last item from the
+        # currently available solution (historic reference)
         current = item
 
+        # in case the maximum range has been reached
+        # for the current element it must be removed
+        # from the day set (new element must be used)
+        if _range == self.max_hours_day: day_set.remove(current)
+
+        # updates the meta information map with the must up to
+        # date values so that they can be used latter for performance
         solution.meta["day"] = _day
+        solution.meta["day_set"] = day_set
         solution.meta["current"] = current
-        solution.meta["range"] = range
+        solution.meta["range"] = _range
         solution.meta["week"] = week
+        solution.meta["week_mask"] = week_mask
 
     def get_structure(self):
         # in case there is no solution it's impossible

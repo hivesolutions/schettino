@@ -83,8 +83,7 @@ def _solve(problem, solution, value = None, all = False, callback = None):
         # retrieves the domain range in an ordered fashion so
         # that the solutions generated from these values are the
         # best possible matches (provides faster resolution speed)
-        #ordered = problem.get_ordered(solution)
-        ordered = range(problem.persons_count)
+        ordered = problem.get_ordered(solution)
 
         for index in ordered:
             result = _solve(problem, solution, index, all, callback)

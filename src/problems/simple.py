@@ -46,9 +46,11 @@ class SimpleProblem(base.Problem):
     max_days_week = 6
     rules = (
         "rule_1",
+        "rule_2"
     )
     persons = (
         "Ana Palhares",
+        "Rita Silva",
         "João Magalhães",
         "Tiago Magalhães",
         "Sofia Magalhães"
@@ -62,3 +64,17 @@ class SimpleProblem(base.Problem):
         1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1
     )
+    persons_r = {
+        "Rita Silva" : {
+            "bitmap" : (
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ),
+            "max_hours_day" : 3
+        }
+    }
