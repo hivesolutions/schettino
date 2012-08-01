@@ -168,12 +168,12 @@ class Problem(object):
         for index in xrange(len(solution)):
             if index % self.number_hours == 0: counter = self._list_p()
 
-            hour = solution[index]
-            if not hour == -1: counter[hour] += 1
+            item = solution[index]
+            if not item == -1: counter[item] += 1
 
             if (index + 1) % self.number_hours == 0:
                 for count in counter:
-                    if count == 0 or count <= self.max_hours_day: continue
+                    if count == 0 or count <= self.get_max_hours_day(item): continue
                     self._add_failure(self.rule_1.__name__)
 
                     return False
@@ -186,8 +186,8 @@ class Problem(object):
         for index in xrange(len(solution)):
             if index % self.number_hours == 0: _counter = self._list_p()
 
-            hour = solution[index]
-            if not hour == -1: _counter[hour] += 1
+            item = solution[index]
+            if not item == -1: _counter[item] += 1
 
             if (index + 1) % self.number_hours == 0:
                 index = 0
@@ -273,7 +273,7 @@ class Problem(object):
         # in case the maximum range has been reached
         # for the current element it must be removed
         # from the day set (new element must be used)
-        if _range == self.max_hours_day: day_set.remove(current)
+        if _range == self.get_max_hours_day(current): day_set.remove(current)
 
         # updates the meta information map with the must up to
         # date values so that they can be used latter for performance
@@ -298,8 +298,14 @@ class Problem(object):
             final = first and second or 0
             _bitmap.append(final)
 
-        # @TODO: !!!! tenho de fazer cache deste valor !!!!
         return _bitmap
+
+    def get_max_hours_day(self, index):
+        person = self.persons[index]
+        rules = self.persons_r.get(person, {})
+        max_hours_day = rules.get("max_hours_day", None)
+        if not max_hours_day: return self.max_hours_day
+        return max_hours_day
 
     def get_structure(self):
         # in case there is no solution it's impossible
@@ -365,6 +371,17 @@ class Problem(object):
         return solution == None and self.solution or solution
 
     def _shorten_name(self, name):
+        """
+        Shortens the provided name so that the first name
+        is shown in the complete form and the last name is
+        provided only with the first letter.
+
+        @type name: String
+        @param name: The name to be shortened.
+        @rtype: String
+        @return: The shortened version of the provided name.
+        """
+
         parts = name.split(" ")
         parts_length = len(parts)
         if parts_length == 1: return name
