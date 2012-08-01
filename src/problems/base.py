@@ -74,6 +74,11 @@ class Problem(object):
     """ The number of persons available to be scheduled
     in the current problem """
 
+    timetables = ()
+    """ The sequence of timetable that are meant to be
+    considered for the current schedule in case no
+    timetables are set the schedule is considered detached """
+
     bitmap = ()
     """ The base bitmap that controls the scheduling
     of the task in a per time basis """
@@ -82,6 +87,10 @@ class Problem(object):
     """ The set of rules to be executed on the verify
     method this way it's possible to control what
     kind of verification are done """
+
+    timetables_r = {}
+    """ The map containing the various timetables, these
+    are simple bitmap sequences with the definitions """
 
     persons_r = {}
     """ The map containing the series of "extra" rules
@@ -127,40 +136,6 @@ class Problem(object):
         for rule in self.rules:
             method = getattr(self, rule)
             self._rules.append(method)
-
-    def get_ordered(self, solution = None):
-        # tries to retrieve the appropriate solution
-        # (defaulting to the current set solution)
-        solution = self._get_solution(solution)
-
-        # retrieves the various meta information attributes from the
-        # solution structure to be able to used them in the order sequence
-        # processing that will occur in this method
-        _range = solution.meta.get("range", 0)
-        day_set = solution.meta.get("day_set", range(self.persons_count))
-
-        # retrieves the current (next) position as the
-        # size of the solution sequence
-        position = len(solution)
-
-        # sets the (initial) ordered sequence as the current
-        # day set (this should already be ordered)
-        ordered = day_set
-
-        removal = []
-        for index in day_set:
-            bitmap = self.get_bitmap(index)
-            if bitmap[position]: continue
-            removal.append(index)
-
-        # in case the removal list is not empty there are
-        # items to be removed so the ordered list must be
-        # clones and the removal items removed
-        if removal:
-            ordered = copy.copy(ordered)
-            for index in removal: ordered.remove(index)
-
-        return ordered
 
     def rule_1(self, solution):
         """
@@ -221,15 +196,6 @@ class Problem(object):
         # passed successfully
         return True
 
-    def _week_count(self, week_mask):
-        count = 0
-
-        for i in range(7):
-            if not week_mask & 1 << i: continue
-            count += 1
-
-        return count
-
     def state(self, solution = None):
         # tries to retrieve the appropriate solution
         # (defaulting to the current set solution)
@@ -258,16 +224,23 @@ class Problem(object):
             current = -1
             _range = 0
 
+        places = self.get_places(position)
+        print "%d -> %s" % (position, places)
+
         # retrieves the current item from the solution
         # and in case it's not valid returns immediately
         # (not going to update the state for invalid values)
         item = solution[-1]
         if item == -1: return
 
+        # in case the current day has not been already touched
+        # for the current item must do so
         if not week_mask[item] & 1 << _day:
             week[item] += 1
             week_mask[item] |= 1 << _day
 
+        # in case the item is the same as the current (previous) value
+        # the range must be incremented (place range as increased)
         if item == current: _range += 1
         else: _range = 1
 
@@ -288,6 +261,67 @@ class Problem(object):
         solution.meta["range"] = _range
         solution.meta["week"] = week
         solution.meta["week_mask"] = week_mask
+
+    def get_ordered(self, solution = None):
+        # tries to retrieve the appropriate solution
+        # (defaulting to the current set solution)
+        solution = self._get_solution(solution)
+
+        # retrieves the various meta information attributes from the
+        # solution structure to be able to used them in the order sequence
+        # processing that will occur in this method
+        _range = solution.meta.get("range", 0)
+        day_set = solution.meta.get("day_set", range(self.persons_count))
+
+        # retrieves the current (next) position as the
+        # size of the solution sequence
+        position = len(solution)
+
+        # sets the (initial) ordered sequence as the current
+        # day set (this should already be ordered)
+        ordered = day_set
+
+        removal = []
+        for index in day_set:
+            bitmap = self.get_bitmap(index)
+            if bitmap[position]: continue
+            removal.append(index)
+
+        # in case the removal list is not empty there are
+        # items to be removed so the ordered list must be
+        # clones and the removal items removed
+        if removal:
+            ordered = copy.copy(ordered)
+            for index in removal: ordered.remove(index)
+
+        return ordered
+
+    def get_places(self, position):
+        # in case the requested position overflows the current problem
+        # (bigger than the number of items) returns an empty map (fallback)
+        if position >= self.number_items: return {}
+
+        # starts the map that will hold the various places that may be
+        # fulfilled for the requested position
+        places = {}
+
+        # retrieves the current day from the position and uses it to retrieve
+        # the series of timetable available for the requested day
+        day = position / self.number_hours
+        timetables = self.timetables[day]
+
+        # iterates over all the timetables to filter the ones that contain a
+        # valid hour for the requested position, for this value an item will
+        # be added to the places map indicating the requested action
+        for timetable in timetables:
+            _timetable = self.timetables_r[timetable]
+            value = _timetable[position]
+            if value == 0: continue
+            places[timetable] = value
+
+        # returns the map containing the various places (values) indexed by
+        # the timetable that originated them
+        return places
 
     def get_bitmap(self, index):
         person = self.persons[index]
@@ -374,6 +408,24 @@ class Problem(object):
 
     def _get_solution(self, solution):
         return solution == None and self.solution or solution
+
+    def _week_count(self, week_mask):
+        # starts the count variable that will hold the number
+        # of "occupied" days in the week defined by the mask
+        count = 0
+
+        # iterates over the range of days in the week to count
+        # the number of days that are filled
+        for i in range(7):
+            # in case the mask is not active for the current day
+            # bitwise and operation continues the loop, otherwise
+            # increment the count variable (one more day found)
+            if not week_mask & 1 << i: continue
+            count += 1
+
+        # returns the count variable, that contains the number
+        # of days counted for the provided week mask
+        return count
 
     def _shorten_name(self, name):
         """
