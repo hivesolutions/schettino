@@ -133,13 +133,18 @@ class Problem(object):
         # (defaulting to the current set solution)
         solution = self._get_solution(solution)
 
-        position = len(solution)
-
-        current = solution.meta.get("current", 0)
+        # retrieves the various meta information attributes from the
+        # solution structure to be able to used them in the order sequence
+        # processing that will occur in this method
         _range = solution.meta.get("range", 0)
         day_set = solution.meta.get("day_set", range(self.persons_count))
-        week = solution.meta.get("week", self._list_p())
 
+        # retrieves the current (next) position as the
+        # size of the solution sequence
+        position = len(solution)
+
+        # sets the (initial) ordered sequence as the current
+        # day set (this should already be ordered)
         ordered = day_set
 
         removal = []
