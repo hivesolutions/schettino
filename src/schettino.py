@@ -91,6 +91,9 @@ def _solve(problem, solution, value = None, all = False, callback = None):
             if not result: continue
             return result
 
+    # returns invalid, because there is no solution for the
+    # current configuration or because the all parameter is
+    # set and no result should be returned
     return None
 
 def handler(problem, solution):
