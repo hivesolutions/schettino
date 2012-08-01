@@ -224,9 +224,6 @@ class Problem(object):
             current = -1
             _range = 0
 
-        places = self.get_places(position)
-        print "%d -> %s" % (position, places)
-
         # retrieves the current item from the solution
         # and in case it's not valid returns immediately
         # (not going to update the state for invalid values)
@@ -277,11 +274,23 @@ class Problem(object):
         # size of the solution sequence
         position = len(solution)
 
+        # retrieves the current set of places for the position, this
+        # value should be a map associating the timetable id with the
+        # type of place for the position
+        places = self.get_places(position)
+        print "%d -> %s" % (position, places)
+
         # sets the (initial) ordered sequence as the current
         # day set (this should already be ordered)
         ordered = day_set
 
+        # starts the list that will hold the various items to be remove
+        # from the day set, the items to be removed correspond to invalid
+        # values that would corrupt the solution
         removal = []
+
+        # iterates over the day set to check if there is a bitmap validation
+        # person available for the task, in case it's not removes the index
         for index in day_set:
             bitmap = self.get_bitmap(index)
             if bitmap[position]: continue
