@@ -643,6 +643,18 @@ class Problem(object):
         return [0 for _value in range(self.persons_count)]
 
     def _linear(self, *args):
+        """
+        Runs a series of permutation on the provided sequence
+        of elements, so that the returned value is the various
+        combinations of values that may possible generate a
+        valid solution.
+
+        @rtype: List
+        @return: The generated (valid) sequence containing the
+        permutations of valuers that can possible generate a
+        valid solution.
+        """
+
         # creates the list that will hold the various permutation
         # items generated from the linearization
         items = []
