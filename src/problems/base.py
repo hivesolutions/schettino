@@ -93,6 +93,11 @@ class Problem(object):
     method this way it's possible to control what
     kind of verification are done """
 
+    days_off = ()
+    """ The days that may be used to provide a day off
+    to a target person, these are indexes relative to
+    monday (zero based) """
+
     timetables_r = {}
     """ The map containing the various timetables, these
     are simple bitmap sequences with the definitions """
@@ -154,21 +159,60 @@ class Problem(object):
         the rule, the contents may be variable.
         """
 
+        # iterates over all the positions available in the current
+        # solution so that all the elements are accounted
         for position in xrange(len(solution)):
+
+            # in case the current position refers a start of a day
+            # the counter must be reset (new counting)
             if position % self.number_hours == 0: counter = self._list_p()
 
+            # retrieves the current set of items for the solution item
+            # in the current position
             items = solution[position]
 
+            # iterates over all the items and adds a counting value for
+            # each of them (to count their hours)
             for item in items:
                 if not item == -1: counter[item] += 1
 
-                if (position + 1) % self.number_hours == 0:
-                    for count in counter:
-                        if count == 0 or count <= self.get_max_hours_day(item): continue
-                        self._add_failure(self.rule_1.__name__)
+            # in case the next position refers the start of a new day
+            # (this is the final day position) and so the items must be
+            # counted for correct values
+            if (position + 1) % self.number_hours == 0:
 
-                        return False
+                # iterates over the counter value to validate the
+                # counts against the working hours week
+                for index in range(len(counter)):
+                    # retrieves the current count value from the counter
+                    # this is the number of times an item has been used
+                    # during the course of the current day
+                    count = counter[index]
 
+                    # in case the  count is not set of the count is less than
+                    # the maximum allowed for the current items index continue
+                    # otherwise adds a failure and returns immediately in error
+                    if count == 0 or count <= self.get_max_hours_day(index): continue
+                    self._add_failure(self.rule_1.__name__)
+                    return False
+
+        # iterates over the counter value to validate the
+        # counts against the working hours week
+        for index in range(len(counter)):
+            # retrieves the current count value from the counter
+            # this is the number of times an item has been used
+            # during the course of the current day
+            count = counter[index]
+
+            # in case the  count is not set of the count is less than
+            # the maximum allowed for the current items index continue
+            # otherwise adds a failure and returns immediately in error
+            if count == 0 or count <= self.get_max_hours_day(index): continue
+            self._add_failure(self.rule_1.__name__)
+            return False
+
+        # returns valid because the rule validation
+        # process has passed with success
         return True
 
     def rule_2(self, solution):
@@ -182,11 +226,11 @@ class Problem(object):
             for item in items:
                 if not item == -1: _counter[item] += 1
 
-                if (position + 1) % self.number_hours == 0:
-                    index = 0
-                    for count in _counter:
-                        if count > 0: counter[index] += 1
-                        index += 1
+            if (position + 1) % self.number_hours == 0:
+                index = 0
+                for count in _counter:
+                    if count > 0: counter[index] += 1
+                    index += 1
 
         for count in counter:
             if count <= self.max_days_week: continue
@@ -236,6 +280,8 @@ class Problem(object):
                 if week_count < self.max_days_week: continue
                 removal.append(item)
 
+            # iterates over all the items to be removed and
+            # removes them from the day set (garbage collection)
             for item in removal: day_set.remove(item)
 
             # creates the various day sets to be used based on
@@ -298,8 +344,9 @@ class Problem(object):
         # retrieves the various meta information attributes from the
         # solution structure to be able to used them in the order sequence
         # processing that will occur in this method
-        _range = solution.meta.get("range", 0)
         day_sets = solution.meta.get("day_sets", self._day_sets_p())
+        currents = solution.meta.get("currents", {})
+        week = solution.meta.get("week", self._list_p())
 
         # retrieves the current (next) position as the
         # size of the solution sequence
@@ -319,6 +366,28 @@ class Problem(object):
         # iterates over the range of places to be attributed for the
         # next position in solution
         for index in xrange(places_count):
+            # retrieves the current place for the place count index
+            # in iteration, going to be used to retrieve previous index
+            place = places[index]
+
+            # tries to retrieve the previous index associated with the
+            # current place (same timetable) this allows the same person
+            # to be allocated contiguously to a timetable, in case an
+            # index is found the current ordered item is simple and the
+            # iteration should continue immediately
+            index_p = self._get_index_p(solution, place, position)
+            if not index_p == None:
+                _ordered = [index_p]
+                ordered.append(_ordered)
+                continue
+
+            # unpacks the place into the timetable (name) and the
+            # type of place and then uses the timetable to retrieve
+            # the size of the current timetable chunk in evaluation
+            # in order to be able to validate availability
+            timetable, _type = place
+            size_t = self._get_size_t(timetable, position)
+
             # retrieves the current day set taking into account
             # the current index in iteration
             day_set = day_sets[index]
@@ -326,18 +395,40 @@ class Problem(object):
             # starts the list that will hold the various items to be remove
             # from the day set, the items to be removed correspond to invalid
             # values that would corrupt the solution
-            removal = []
+            removal = set()
 
             # starts the current ordered item as a "simple" copy of the day
             # set (default and complete solution)
             _ordered = day_set
 
-            # iterates over the day set to check if there is a bitmap validation
+            # iterates over the ordered to check if there is a complete valid
             # person available for the task, in case it's not removes the index
-            for index in day_set:
+            for index in _ordered:
+                # retrieves the bitmap for the current index and checks
+                # for the timetable size if there is availability in
+                # in the bitmap for such positions, otherwise adds the
+                # index to the list of removal elements
                 bitmap = self.get_bitmap(index)
-                if bitmap[position]: continue
-                removal.append(index)
+                for _index in range(size_t):
+                    if bitmap[position + _index]: continue
+                    removal.add(index)
+                    break
+
+                # retrieves the range for the current index defaulting
+                # to zero in case no range is found, then validates
+                # if the current range plus the size of the timetable
+                # chunk is less that the maximum number of hours for
+                # the work (have enough hours available)
+                _range = currents.get(index) or 0
+                if _range + size_t > self.get_max_hours_day(index):
+                    removal.add(index)
+
+                # retrieves the timetables for the index in the current
+                # position and checks if the timetable for the current
+                # place in question exists in such position and index
+                # (person can work for that timetable today)
+                timetables = self.get_timetables(position, index)
+                if not timetable in timetables: removal.add(index)
 
             # in case the removal list is not empty there are
             # items to be removed so the ordered list must be
@@ -345,6 +436,28 @@ class Problem(object):
             if removal:
                 _ordered = copy.copy(_ordered)
                 for index in removal: _ordered.remove(index)
+
+            def index_sort(first, second):
+                # retrieves the priority values for both
+                # the first and second indexes (persons)
+                _name, first_p = self.persons[first]
+                _name, second_p = self.persons[second]
+
+                # retrieves the week occurrence count values
+                # for both the first and second indexes (persons)
+                first_w = week[first]
+                second_w = week[second]
+
+                # creates the comparison tuples for both the
+                # first and second elements and then returns the
+                # result of the tuple comparison (sequence comparison)
+                first_t = (first_p, first_w)
+                second_t = (second_p, second_w)
+                return cmp(first_t, second_t)
+
+            # sorts the partial ordered list using the composite
+            # index sorter (tuple priority sorting)
+            _ordered.sort(index_sort)
 
             # adds the current ordered item to the list of ordered values to be
             # used in the next iteration
@@ -364,7 +477,7 @@ class Problem(object):
         # (bigger than the number of items) returns an empty tuple (fallback)
         if position >= self.number_items: return ()
 
-        # starts the lists that will hold the various places that may be
+        # starts the list that will hold the various places that may be
         # fulfilled for the requested position
         places = []
 
@@ -387,8 +500,8 @@ class Problem(object):
         return places
 
     def get_bitmap(self, index):
-        person = self.persons[index]
-        rules = self.persons_r.get(person, {})
+        id, _priority = self.persons[index]
+        rules = self.persons_r.get(id, {})
         bitmap = rules.get("bitmap", None)
         if not bitmap: return self.bitmap
 
@@ -403,11 +516,21 @@ class Problem(object):
         return _bitmap
 
     def get_max_hours_day(self, index):
-        person = self.persons[index]
-        rules = self.persons_r.get(person, {})
+        id, _priority = self.persons[index]
+        rules = self.persons_r.get(id, {})
         max_hours_day = rules.get("max_hours_day", None)
         if not max_hours_day: return self.max_hours_day
         return max_hours_day
+
+    def get_timetables(self, position, index):
+        day = position / self.number_hours
+        id, _priority = self.persons[index]
+        rules = self.persons_r.get(id, {})
+        timetables = rules.get("timetables", None)
+        if not timetables: return self.timetables[day]
+
+        _timetables = [value for value in self.timetables[day] if value in timetables[day]]
+        return _timetables
 
     def get_structure(self):
         # in case there is no solution it's impossible
@@ -450,7 +573,10 @@ class Problem(object):
             for value in values:
                 # uses it to retrieve the appropriate string value using
                 # the problem definition for the resolution process
-                value_s = value == -1 and "&nbsp;" or self._shorten_name(self.persons[value])
+                id, _priority = self.persons[value]
+                person = self.persons_r[id]
+                name = person.get("name", id)
+                value_s = value == -1 and "&nbsp;" or self._shorten_name(name)
 
                 # tries to retrieve the item for the current value in the
                 # current position map in case it succeeds this value is
@@ -554,6 +680,57 @@ class Problem(object):
         # by positions (internal day positions, modulus)
         return structure
 
+    def get_report(self):
+        # initializes the various internal structures for
+        # the report to the default (empty) values
+        indexes = []
+        hours = {}
+        days = {}
+
+        # retrieves the structure for the current solution, this
+        # the value that is going to be used to construct the report
+        structure = self.get_structure()
+
+        # iterates over all the days in the structure to populate
+        # the report structures
+        for day in structure:
+
+            # iterates over all the items in the day to update
+            # the report structure for the items contained
+            for _position, items in day.items():
+
+                # iterates over all the items in the current position
+                # to update the report structure
+                for index, item in items.items():
+                    # retrieves the various properties from the
+                    # item to be used in the processing
+                    size = item["size"]
+
+                    # in case the index is not already present in the
+                    # indexes list adds it to the list
+                    if not index in indexes: indexes.append(index)
+
+                    # retrieves the various integer updatable values and
+                    # sets the values into them
+                    _hours = hours.get(index, 0)
+                    _days = days.get(index, 0)
+                    _hours += size
+                    _days += 1
+
+                    # updates the integer values in the appropriates structure
+                    # to be able to expose them in report
+                    hours[index] = _hours
+                    days[index] = _days
+
+        # updates the report map with must up to date values
+        # on the various values and returns this value
+        report = {
+            "indexes" : indexes,
+            "hours" : hours,
+            "days" : days
+        }
+        return report
+
     def print_s(self, solution = None):
         solution = self._get_solution(solution)
         if not solution: raise RuntimeError("No solution is available in problem")
@@ -566,6 +743,113 @@ class Problem(object):
             print "%s, " % person,
 
             if (index + 1) % self.number_hours == 0: print ""
+
+    def _get_index_p(self, solution, place, position):
+        """
+        Retrieves the index value (person index) for the previous
+        position relative to the provided one in the same timetable
+        (value extracted from the place tuple).
+
+        This method is useful to check the person that is currently
+        allocated to the timetable in the place.
+
+        @type solution: Solution
+        @param solution: The solution to be used in the checking of
+        the previous index (reference value).
+        @type place: Tuple
+        @param place: The place tuple to extract the timetable that
+        will be used for the computation of the previous index.
+        @type position: int
+        @param position: The position index that will be used to
+        calculate the previous index for computation.
+        @rtype: int
+        @return: The previous index for the timetable described
+        in the provided place and for the provided position.
+        """
+
+        # in case the requested position is not valid returns
+        # immediately an invalid value
+        if position < 0: return None
+
+        # unpacks the place into the timetable (name) an the
+        # type of the place and then retrieves the
+        timetable, _type = place
+        places_p = self.get_places(position - 1)
+
+        # starts the index reference values, this are the values
+        # that are going to be used during the iteration cycle
+        # for the saving of the relative index values
+        index = 0
+        _index = None
+
+        # iterates over all the previous places to check for
+        # the correct timetable and to retrieve the correct relative
+        # index value for the timetable in the items sequence
+        for place_p in places_p:
+            # extras the previous place tuple into the timetable
+            # and the type and checks for a match in such case
+            # saves the current (relative) index value and breaks
+            _timetable, __type = place_p
+            if timetable == _timetable:
+                _index = index
+                break
+
+            # increments the index value (iteration cycle)
+            index += 1
+
+        # in case the relative index reference is not defined return
+        # an invalid value (timetable is starting) otherwise extracts
+        # the current item from the solution and returns the index
+        # relative value from the sequence of items
+        if _index == None: return None
+        items = solution[position - 1]
+        return items[_index]
+
+    def _get_size_t(self, timetable_n, position):
+        """
+        Retrieves the size of the timetable sequence starting
+        at the provided position.
+
+        The position is required because there can be multiple
+        sequences in a single timetable.
+
+        @type timetable_n: String
+        @param timetable_n: The name (id) of the timetable to
+        be used for the calculus of the sequence size.
+        @type position: int
+        @param position: The (start) position to be used in the
+        calculus of the sequence size.
+        @rtype: int
+        @return: The size for the timetable sequence starting at
+        the provided position.
+        """
+
+        # tries to retrieve the timetable (rules) using the provided
+        # timetable name (id), default to invalid and returns immediately
+        # in case no timetable is found
+        timetable = self.timetables_r.get(timetable_n, None)
+        if not timetable: return 0
+
+        # starts the index value to zero, this value will act as a
+        # counter during the loop over the timetable
+        index = 0
+
+        # iterates continuously to the count the range of the current
+        # sequence, stopping either at a zero value or at the end of
+        # the timetable definition
+        while True:
+            # in case the timetable end has been reached breaks
+            # otherwise retrieves the current timetable value and
+            # in case it's zero (no value) and end of sequence has
+            # been reached and so breaks
+            if position + index == len(timetable): break
+            value = timetable[position + index]
+            if value == 0: break
+            index += 1
+
+        # returns the calculated index as the length of the sequence
+        # of the timetable starting at the provided position
+        return index
 
     def _add_failure(self, name):
         failures = self.instrumentation.get("failures", {})
