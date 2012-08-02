@@ -53,7 +53,10 @@ class SimpleProblem(base.Problem):
         "Rita Jerónimo",
         "Ana Isabel",
         "Alexandra Lopes",
-        "Albano Madureira"
+        "Albano Madureira",
+        "Tobias Matias",
+        "André Rabeton",
+        "André Rabetoadsan"
     )
     timetables = (
         ("morning_s", "intermediate", "night"),
@@ -65,13 +68,13 @@ class SimpleProblem(base.Problem):
         ("morning", "intermediate", "night")
     )
     bitmap = (
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
     )
     timetables_r = {
         "morning" : (

@@ -70,15 +70,23 @@ def _solve(problem, solution, value = None, all = False, callback = None):
         # the next iteration in solving process
         problem.state(solution)
 
+        # retrieves the current solution position and in case it's
+        # the last calls the callback in case one is defined and then
+        # returns the solution backtracking
         position = len(solution)
         if position == problem.number_items:
             callback and callback(problem, solution)
             return solution
 
+    # in case the current global bitmap position is not set, ther's
+    # no need to allocate a person to the task
     if problem.bitmap[position] == 0:
-        result = _solve(problem, solution, -1, all, callback)
+        result = _solve(problem, solution, [-1], all, callback)
         if all: pass
         elif result: return result
+
+    # otherwise the normal situation applies an a person (index) must
+    # be allocated to the task, must be selected from a ordered list
     else:
         # retrieves the domain range in an ordered fashion so
         # that the solutions generated from these values are the

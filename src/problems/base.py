@@ -39,6 +39,11 @@ __license__ = "GNU General Public License (GPL), Version 3"
 
 import copy
 
+MAX_ALLOCATIONS = 8
+""" The maximum number of allocation for a certain task
+and for a certain slot (position) this value have some
+impact in the performance of the engine """
+
 class Solution(list):
     """
     The base class for the solution of a problem,
@@ -143,37 +148,45 @@ class Problem(object):
         of a task to certain number of hours per day.
 
         This rule is named - work day time rule.
+
+        @type solution: Solution
+        @param solution: The solution to be tested against
+        the rule, the contents may be variable.
         """
 
-        for index in xrange(len(solution)):
-            if index % self.number_hours == 0: counter = self._list_p()
+        for position in xrange(len(solution)):
+            if position % self.number_hours == 0: counter = self._list_p()
 
-            item = solution[index]
-            if not item == -1: counter[item] += 1
+            items = solution[position]
 
-            if (index + 1) % self.number_hours == 0:
-                for count in counter:
-                    if count == 0 or count <= self.get_max_hours_day(item): continue
-                    self._add_failure(self.rule_1.__name__)
+            for item in items:
+                if not item == -1: counter[item] += 1
 
-                    return False
+                if (position + 1) % self.number_hours == 0:
+                    for count in counter:
+                        if count == 0 or count <= self.get_max_hours_day(item): continue
+                        self._add_failure(self.rule_1.__name__)
+
+                        return False
 
         return True
 
     def rule_2(self, solution):
         counter = self._list_p()
 
-        for index in xrange(len(solution)):
-            if index % self.number_hours == 0: _counter = self._list_p()
+        for position in xrange(len(solution)):
+            if position % self.number_hours == 0: _counter = self._list_p()
 
-            item = solution[index]
-            if not item == -1: _counter[item] += 1
+            items = solution[position]
 
-            if (index + 1) % self.number_hours == 0:
-                index = 0
-                for count in _counter:
-                    if count > 0: counter[index] += 1
-                    index += 1
+            for item in items:
+                if not item == -1: _counter[item] += 1
+
+                if (position + 1) % self.number_hours == 0:
+                    index = 0
+                    for count in _counter:
+                        if count > 0: counter[index] += 1
+                        index += 1
 
         for count in counter:
             if count <= self.max_days_week: continue
@@ -201,16 +214,20 @@ class Problem(object):
         # (defaulting to the current set solution)
         solution = self._get_solution(solution)
 
+        # retrieves the current values for the meta information
+        # on the solution state, this is considered to be the state
+        # of the solution and so these are the values to change
         day = solution.meta.get("day", 0)
-        day_set = solution.meta.get("day_set", range(self.persons_count))
-        current = solution.meta.get("current", -1)
-        _range = solution.meta.get("range", 0)
+        day_sets = solution.meta.get("day_sets", self._day_sets_p())
+        currents = solution.meta.get("currents", {})
         week = solution.meta.get("week", self._list_p())
         week_mask = solution.meta.get("week_mask", self._list_p())
 
         position = len(solution)
         _day = position / self.number_hours
         if not _day == day:
+            # must create the model for the various day sets
+            # to be created (this is going to be multiplied)
             day_set = range(self.persons_count)
 
             removal = []
@@ -221,41 +238,55 @@ class Problem(object):
 
             for item in removal: day_set.remove(item)
 
-            current = -1
-            _range = 0
+            # creates the various day sets to be used based on
+            # the model day set that was just created
+            day_sets = [copy.copy(day_set) for _index in xrange(MAX_ALLOCATIONS)]
 
-        # retrieves the current item from the solution
-        # and in case it's not valid returns immediately
-        # (not going to update the state for invalid values)
-        item = solution[-1]
-        if item == -1: return
+            # creates a new map for the maintenance of the ranges
+            # for the current items
+            currents = {}
 
-        # in case the current day has not been already touched
-        # for the current item must do so
-        if not week_mask[item] & 1 << _day:
-            week[item] += 1
-            week_mask[item] |= 1 << _day
+        # retrieves the set of items just set in the current solution
+        # (this should be the last item of the solution)
+        items = solution[-1]
 
-        # in case the item is the same as the current (previous) value
-        # the range must be incremented (place range as increased)
-        if item == current: _range += 1
-        else: _range = 1
+        # iterates over all the currents values to house keep
+        # them removing the ones that are no longer in use
+        for key in currents.keys():
+            if key in items: continue
+            del currents[key]
 
-        # sets the current element as the last item from the
-        # currently available solution (historic reference)
-        current = item
+        # iterates over all the items to update their problem oriented
+        # counting values to the must up to date versions
+        for item in items:
+            # in case the item is not valid returns immediately
+            # (not going to update the state for invalid values)
+            if item == -1: continue
 
-        # in case the maximum range has been reached
-        # for the current element it must be removed
-        # from the day set (new element must be used)
-        if _range == self.get_max_hours_day(current): day_set.remove(current)
+            # in case the current day has not been already touched
+            # for the current item must do so
+            if not week_mask[item] & 1 << _day:
+                week[item] += 1
+                week_mask[item] |= 1 << _day
+
+            # retrieves the must updates version of the items range from the
+            # currents map and increments it with one more value, in case the
+            # range does not exists (first time) creates one
+            _range = currents.get(item, 0)
+            _range += 1
+            currents[item] = _range
+
+            # in case the maximum range has been reached
+            # for the current item it must be removed from
+            # the day sets (element reached starvation)
+            if _range == self.get_max_hours_day(item):
+                for day_set in day_sets: day_set.remove(item)
 
         # updates the meta information map with the must up to
         # date values so that they can be used latter for performance
         solution.meta["day"] = _day
-        solution.meta["day_set"] = day_set
-        solution.meta["current"] = current
-        solution.meta["range"] = _range
+        solution.meta["day_sets"] = day_sets
+        solution.meta["currents"] = currents
         solution.meta["week"] = week
         solution.meta["week_mask"] = week_mask
 
@@ -268,7 +299,7 @@ class Problem(object):
         # solution structure to be able to used them in the order sequence
         # processing that will occur in this method
         _range = solution.meta.get("range", 0)
-        day_set = solution.meta.get("day_set", range(self.persons_count))
+        day_sets = solution.meta.get("day_sets", self._day_sets_p())
 
         # retrieves the current (next) position as the
         # size of the solution sequence
@@ -278,41 +309,64 @@ class Problem(object):
         # value should be a map associating the timetable id with the
         # type of place for the position
         places = self.get_places(position)
+        places_count = len(places)
         print "%d -> %s" % (position, places)
 
-        # sets the (initial) ordered sequence as the current
-        # day set (this should already be ordered)
-        ordered = day_set
+        # creates the list that will hold the various ordered items
+        # as tuples of possible index solutions
+        ordered = []
 
-        # starts the list that will hold the various items to be remove
-        # from the day set, the items to be removed correspond to invalid
-        # values that would corrupt the solution
-        removal = []
+        # iterates over the range of places to be attributed for the
+        # next position in solution
+        for index in xrange(places_count):
+            # retrieves the current day set taking into account
+            # the current index in iteration
+            day_set = day_sets[index]
 
-        # iterates over the day set to check if there is a bitmap validation
-        # person available for the task, in case it's not removes the index
-        for index in day_set:
-            bitmap = self.get_bitmap(index)
-            if bitmap[position]: continue
-            removal.append(index)
+            # starts the list that will hold the various items to be remove
+            # from the day set, the items to be removed correspond to invalid
+            # values that would corrupt the solution
+            removal = []
 
-        # in case the removal list is not empty there are
-        # items to be removed so the ordered list must be
-        # clones and the removal items removed
-        if removal:
-            ordered = copy.copy(ordered)
-            for index in removal: ordered.remove(index)
+            # starts the current ordered item as a "simple" copy of the day
+            # set (default and complete solution)
+            _ordered = day_set
 
+            # iterates over the day set to check if there is a bitmap validation
+            # person available for the task, in case it's not removes the index
+            for index in day_set:
+                bitmap = self.get_bitmap(index)
+                if bitmap[position]: continue
+                removal.append(index)
+
+            # in case the removal list is not empty there are
+            # items to be removed so the ordered list must be
+            # clones and the removal items removed
+            if removal:
+                _ordered = copy.copy(_ordered)
+                for index in removal: _ordered.remove(index)
+
+            # adds the current ordered item to the list of ordered values to be
+            # used in the next iteration
+            ordered.append(_ordered)
+
+        # "calculates" the various linear solution for the ordered set
+        # this should create the various permutations of values for the
+        # next iteration, the order of priority should be preserved
+        ordered = self._linear(*ordered)
+
+        # returns the list of ordered elements for the places to be assigned
+        # in the subsequent iteration of allocation
         return ordered
 
     def get_places(self, position):
         # in case the requested position overflows the current problem
-        # (bigger than the number of items) returns an empty map (fallback)
-        if position >= self.number_items: return {}
+        # (bigger than the number of items) returns an empty tuple (fallback)
+        if position >= self.number_items: return ()
 
-        # starts the map that will hold the various places that may be
+        # starts the lists that will hold the various places that may be
         # fulfilled for the requested position
-        places = {}
+        places = []
 
         # retrieves the current day from the position and uses it to retrieve
         # the series of timetable available for the requested day
@@ -321,14 +375,14 @@ class Problem(object):
 
         # iterates over all the timetables to filter the ones that contain a
         # valid hour for the requested position, for this value an item will
-        # be added to the places map indicating the requested action
+        # be added to the places list indicating the requested action
         for timetable in timetables:
             _timetable = self.timetables_r[timetable]
             value = _timetable[position]
             if value == 0: continue
-            places[timetable] = value
+            places.append((timetable, value))
 
-        # returns the map containing the various places (values) indexed by
+        # returns the tuple containing the various places (values) indexed by
         # the timetable that originated them
         return places
 
@@ -364,36 +418,140 @@ class Problem(object):
         # starts the initial value for the structure (treated
         # solution value) and for the day and item
         structure = []
-        day = []
+        day = {}
         item = {}
 
-        for index in range(len(self.solution)):
-            if index % self.number_hours == 0:
+        # iterates over the range of the solution to create the various
+        # items that describe a task in a contiguous approach
+        for position in range(len(self.solution)):
+            # retrieves the current day relative position, this is simply
+            # the modules of the position with the number of hours in a day
+            position_d = position % self.number_hours
+
+            # in case the current position modulus represents a day
+            # transition must reset all the structures used in the
+            # structure creation (day cleanup)
+            if position_d == 0:
                 item = {}
-                day = []
+                day = {}
                 structure.append(day)
 
-            # retrieve the value (index) from the solution and then
-            # uses it to retrieve the appropriate string value using
-            # the problem definition for the resolution process
-            value = self.solution[index]
-            value_s = value == -1 and "&nbsp;" or self._shorten_name(self.persons[value])
+            # retrieve the values (indexes) from the solution these are
+            # the indexes allocated to the solution at this time (position)
+            values = self.solution[position]
 
-            # retrieves the previous index (value) from the previous
-            # iteration and compares it with the current value in case
-            # the value is the same reuses the item
-            value_p = item.get("index", None)
-            if value == value_p:
-                item["size"] += 1
-            else:
-                item = {
-                    "index" : value,
-                    "name" : value_s,
-                    "time" : "12:30",
-                    "size" : 1
-                }
-                day.append(item)
+            # creates a new map for the items in the current position of the
+            # day then sets this map in the day (for reference)
+            position_m = {}
+            day[position_d] = position_m
 
+            # iterates over all the value in the solution to creates the
+            # appropriate representation for them in the day
+            for value in values:
+                # uses it to retrieve the appropriate string value using
+                # the problem definition for the resolution process
+                value_s = value == -1 and "&nbsp;" or self._shorten_name(self.persons[value])
+
+                # tries to retrieve the item for the current value in the
+                # current position map in case it succeeds this value is
+                # used otherwise a new item is used and set in the map
+                # representing the current position in the day
+                position_p = day.get(position_d - 1, {})
+                item = position_p.get(value, None)
+                if item:
+                    item["size"] += 1
+                else:
+                    item = {
+                        "index" : value,
+                        "name" : value_s,
+                        "position" : position,
+                        "size" : 1,
+                        "width" : -1,
+                        "position_d" : -1
+                    }
+
+                position_m[value] = item
+
+        # creates the list of items that will be used to store
+        # the already processed items and will avoid duplicated
+        # items in the final structure (redundancy removal)
+        _items = []
+
+        # iterates over all the days in the structure to trigger
+        # the global item "processing"
+        for day in structure:
+
+            # iterates over all the positions in the day to process
+            # all the items contained in them
+            for position, position_m in day.items():
+
+                # creates the list that will hold the various index
+                # values to the items to be removed at the end of
+                # the current iteration
+                removal = []
+
+                # iterates over all the items in the position map
+                # to process them accordingly
+                for index, item in position_m.items():
+
+                    # in case the item already exists in the list of
+                    # "processed" items must be removed (redundancy removal)
+                    if item in _items:
+                        # adds the index element to the list of items
+                        # to be removed at the end of iteration
+                        removal.append(index)
+
+                    # otherwise it's the first "view" and a processing
+                    # step must occur in the item
+                    else:
+                        # retrieves the current item size to be able
+                        # to percolate over the "future" (next) elements
+                        size = item["size"]
+
+                        # start the item's width and position with the
+                        # default values (original values)
+                        width = 1
+                        position_d = 1
+
+                        # iterates over the size range to be able to inspect
+                        # the next items in the day and make assumptions on the
+                        # with and position
+                        for _index in xrange(size):
+                            # retrieves the current (future) position and retrieves
+                            # the length of it to set it as the with in case it's
+                            # greater than the currently set width
+                            position_f = day.get(position + _index)
+                            position_length = len(position_f)
+                            width = position_length > width and position_length or width
+
+                            # iterates over all the items in the future position
+                            # to compare their widths and position with the current
+                            for _index_f, item_f in position_f.items():
+                                # retrieves both the future with and position and compares
+                                # them with the currently set ones in case their are either
+                                # greater (for with) or lower or equal (for position) a
+                                # value substitution occurs
+                                _width = item_f["width"]
+                                _position_d = item_f["position_d"]
+                                if not _width == -1 and _width > width: width = _width
+                                if not _position_d == -1 and _position_d <= position_d:
+                                    position_d = _position_d + 1
+
+                        # updates the item's values with the newly
+                        # computed ones and adds the item to the
+                        # list of "processed" items
+                        item["width"] = width
+                        item["position_d"] = position_d
+                        _items.append(item)
+
+                # iterates over all the index in the removal
+                # list and removes the values for those indexes
+                # in the position map
+                for index in removal: del position_m[index]
+
+        # returns the final processed structure containing
+        # the transformed items organized by days and
+        # by positions (internal day positions, modulus)
         return structure
 
     def print_s(self, solution = None):
@@ -456,6 +614,19 @@ class Problem(object):
 
         return first + " " + last[0] + "."
 
+    def _day_sets_p(self):
+        """
+        Creates a new list to hold a series of sets for a day
+        this is useful to maintain a list of values that are
+        possible options for a given task for a day.
+
+        @rtype: List
+        @return: The generated day sets structure for the
+        current problem.
+        """
+
+        return [range(self.persons_count) for _index in xrange(MAX_ALLOCATIONS)]
+
     def _list_p(self):
         """
         Creates a new empty list for the currently defined
@@ -470,3 +641,24 @@ class Problem(object):
         """
 
         return [0 for _value in range(self.persons_count)]
+
+    def _linear(self, *args):
+        items = []
+
+        def callback(item):
+            items.append(item)
+
+        self.__linear([], args, callback)
+        return items
+
+    def __linear(self, current, remaining, callback):
+        if not remaining:
+            callback and callback(current)
+            return
+
+        head = remaining[0]
+        tail = remaining[1:]
+
+        for element in head:
+            if element in current: continue
+            self.__linear(current + [element], tail, callback)
