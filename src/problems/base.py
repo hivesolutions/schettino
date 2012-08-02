@@ -643,22 +643,35 @@ class Problem(object):
         return [0 for _value in range(self.persons_count)]
 
     def _linear(self, *args):
+        # creates the list that will hold the various permutation
+        # items generated from the linearization
         items = []
 
         def callback(item):
             items.append(item)
 
+        # runs the linear process using the provided arguments set
+        # and then returns the resulting items list to the caller
         self.__linear([], args, callback)
         return items
 
     def __linear(self, current, remaining, callback):
+        # in case there are no more items in the remaining
+        # list the callback must be called and the recursion
+        # must be terminated by returning immediately
         if not remaining:
             callback and callback(current)
             return
 
+        # retrieves the head and the tail components of the
+        # remaining set to be used in the iteration
         head = remaining[0]
         tail = remaining[1:]
 
+        # iterates over all the element of the head component
+        # and runs the linear process, but only in case the
+        # element does not already exists in the current list
+        # (should avoid duplicated elements in solution)
         for element in head:
             if element in current: continue
             self.__linear(current + [element], tail, callback)
