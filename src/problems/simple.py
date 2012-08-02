@@ -42,21 +42,24 @@ import base
 class SimpleProblem(base.Problem):
     number_days = 7
     number_hours = 13
+    number_days_off = 1
     max_hours_day = 7
     max_days_week = 6
-    rules = (
-        "rule_1",
-        "rule_2"
-    )
+    rules = ()
+    days_off = (2, 3, 4)
     persons = (
-        "Ana Palhares",
-        "Rita Jerónimo",
-        "Ana Isabel",
-        "Alexandra Lopes",
-        "Albano Madureira",
-        "Tobias Matias",
-        "André Rabeton",
-        "André Rabetoadsan"
+        ("Rita Jerónimo", 1),
+        ("Maryna Lenok", 1),
+        ("Inês Pereira", 1),
+        ("Sara Silva", 1),
+        ("Delfina Gomes", 2),
+        ("Ana Palhares", 3),
+        ("Ana Isabel", 3),
+        ("Alexandra Lopes", 3),
+        ("Albano Madureira", 3),
+        ("Luana Pagunge", 3),
+        ("Fátima Felgueiras", 3),
+        ("Pedro Flores", 3)
     )
     timetables = (
         ("morning_s", "intermediate", "night"),
@@ -96,13 +99,13 @@ class SimpleProblem(base.Problem):
             0, 0, 2, 1, 1, 1, 3, 1, 0, 0, 0, 0, 0
         ),
         "night" : (
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1,
-            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 1
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0,
+            0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 3, 1, 0
         ),
         "morning_s" : (
             2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -131,9 +134,131 @@ class SimpleProblem(base.Problem):
                 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
             ),
-            "max_hours_day" : 3
+            "max_hours_day" : 10,
+            "number_days_off" : 0
+        },
+        "Maryna Lenok" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Inês Pereira" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Sara Silva" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Delfina Gomes" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Ana Palhares" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Ana Isabel" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Alexandra Lopes" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Albano Madureira" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Luana Pagunge" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Fátima Felgueiras" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
+        },
+        "Pedro Flores" : {
+            "timetables" : (
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night"),
+                ("morning", "intermediate", "night")
+            )
         }
     }
