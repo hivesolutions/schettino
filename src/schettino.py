@@ -40,7 +40,14 @@ __license__ = "GNU General Public License (GPL), Version 3"
 import time
 
 import problems.base
+import problems.file
 import problems.simple
+import problems.complex
+
+problems.base
+problems.file
+problems.simple
+problems.complex
 
 def solve(problem, value = None, all = False, callback = None):
     solution = problems.base.Solution()
