@@ -99,7 +99,6 @@ def _solve(problem, solution, value = None, all = False, callback = None):
         # that the solutions generated from these values are the
         # best possible matches (provides faster resolution speed)
         ordered = problem.get_ordered(solution)
-
         for index in ordered:
             result = _solve(problem, solution, index, all, callback)
             if all: continue
