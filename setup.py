@@ -52,8 +52,7 @@ setuptools.setup(
     url = "http://schettino.com",
     zip_safe = False,
     py_modules = [
-        "schettino",
-        "extras"
+        "schettino"
     ],
     packages = [
         "problems"
@@ -61,9 +60,6 @@ setuptools.setup(
     package_dir = {
         "" : os.path.normpath("src")
     },
-    install_requires = [
-        "flask"
-    ],
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
