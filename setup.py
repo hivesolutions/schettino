@@ -50,7 +50,7 @@ setuptools.setup(
     license = "GNU General Public License (GPL), Version 3",
     keywords = "schettino scheduling",
     url = "http://schettino.com",
-    zip_safe = False,
+    zip_safe = True,
     py_modules = [
         "schettino"
     ],
