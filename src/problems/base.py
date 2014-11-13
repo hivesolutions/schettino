@@ -437,27 +437,17 @@ class Problem(object):
                 _ordered = copy.copy(_ordered)
                 for index in removal: _ordered.remove(index)
 
-            def index_sort(first, second):
-                # retrieves the priority values for both
-                # the first and second indexes (persons)
-                _name, first_p = self.persons[first]
-                _name, second_p = self.persons[second]
-
-                # retrieves the week occurrence count values
-                # for both the first and second indexes (persons)
-                first_w = week[first]
-                second_w = week[second]
-
-                # creates the comparison tuples for both the
-                # first and second elements and then returns the
-                # result of the tuple comparison (sequence comparison)
-                first_t = (first_p, first_w)
-                second_t = (second_p, second_w)
-                return cmp(first_t, second_t)
+            def key_sort(item, second):
+                # retrieves the priority values for the provided
+                # item and also the week for it, then returns
+                # the appropriate tuple representing the key
+                _name, person = self.persons[item]
+                week = week[item]
+                return (person, week)
 
             # sorts the partial ordered list using the composite
             # index sorter (tuple priority sorting)
-            _ordered.sort(index_sort)
+            _ordered.sort(key = key_sort)
 
             # adds the current ordered item to the list of ordered values to be
             # used in the next iteration
