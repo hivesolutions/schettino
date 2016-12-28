@@ -119,3 +119,5 @@ def run():
 
 if __name__ == "__main__":
     run()
+else:
+    __path__ = []
