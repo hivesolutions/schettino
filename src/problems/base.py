@@ -154,8 +154,8 @@ class Problem(object):
 
         This rule is named - work day time rule.
 
-        @type solution: Solution
-        @param solution: The solution to be tested against
+        :type solution: Solution
+        :param solution: The solution to be tested against
         the rule, the contents may be variable.
         """
 
@@ -743,17 +743,17 @@ class Problem(object):
         This method is useful to check the person that is currently
         allocated to the timetable in the place.
 
-        @type solution: Solution
-        @param solution: The solution to be used in the checking of
+        :type solution: Solution
+        :param solution: The solution to be used in the checking of
         the previous index (reference value).
-        @type place: Tuple
-        @param place: The place tuple to extract the timetable that
+        :type place: Tuple
+        :param place: The place tuple to extract the timetable that
         will be used for the computation of the previous index.
-        @type position: int
-        @param position: The position index that will be used to
+        :type position: int
+        :param position: The position index that will be used to
         calculate the previous index for computation.
-        @rtype: int
-        @return: The previous index for the timetable described
+        :rtype: int
+        :return: The previous index for the timetable described
         in the provided place and for the provided position.
         """
 
@@ -803,14 +803,14 @@ class Problem(object):
         The position is required because there can be multiple
         sequences in a single timetable.
 
-        @type timetable_n: String
-        @param timetable_n: The name (id) of the timetable to
+        :type timetable_n: String
+        :param timetable_n: The name (id) of the timetable to
         be used for the calculus of the sequence size.
-        @type position: int
-        @param position: The (start) position to be used in the
+        :type position: int
+        :param position: The (start) position to be used in the
         calculus of the sequence size.
-        @rtype: int
-        @return: The size for the timetable sequence starting at
+        :rtype: int
+        :return: The size for the timetable sequence starting at
         the provided position.
         """
 
@@ -874,10 +874,10 @@ class Problem(object):
         is shown in the complete form and the last name is
         provided only with the first letter.
 
-        @type name: String
-        @param name: The name to be shortened.
-        @rtype: String
-        @return: The shortened version of the provided name.
+        :type name: String
+        :param name: The name to be shortened.
+        :rtype: String
+        :return: The shortened version of the provided name.
         """
 
         parts = name.split(" ")
@@ -894,8 +894,8 @@ class Problem(object):
         this is useful to maintain a list of values that are
         possible options for a given task for a day.
 
-        @rtype: List
-        @return: The generated day sets structure for the
+        :rtype: List
+        :return: The generated day sets structure for the
         current problem.
         """
 
@@ -909,8 +909,8 @@ class Problem(object):
         This is a utility function to be used to shorten the
         time used to create a list of counters for persons.
 
-        @rtype: List
-        @return: The newly created zeroed list of counters
+        :rtype: List
+        :return: The newly created zeroed list of counters
         for the various persons.
         """
 
@@ -923,8 +923,8 @@ class Problem(object):
         combinations of values that may possible generate a
         valid solution.
 
-        @rtype: List
-        @return: The generated (valid) sequence containing the
+        :rtype: List
+        :return: The generated (valid) sequence containing the
         permutations of valuers that can possible generate a
         valid solution.
         """
